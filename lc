@@ -1,20 +1,39 @@
 #!/bin/bash
+
+# ==========================================
+# CUSTOM PERSONAL COMMAND: lc
+# Version: 1.0.0
+# ==========================================
+
+VERSION="1.0.0"
+
+# Check for version flag
+if [ "$1" = "--version" ] || [ "$1" = "-v" ]; then
+    echo "lc version $VERSION"
+    exit 0
+fi
+
+# Define where your personal logs will be stored permanently
 LOG_DIR="$HOME/project_logs"
 mkdir -p "$LOG_DIR"
 FINAL_FILE="$LOG_DIR/saved_commands.txt"
 
+# If the user types 'lc add', capture the previous command from history
 if [ "$1" = "add" ]; then
     LAST_CMD=$(history 2 | head -n 1 | sed 's/^[ ]*[0-9]*[ ]*//')
+    
     if [ -z "$LAST_CMD" ] || [[ "$LAST_CMD" == "lc add" ]]; then
         echo "⚠️ Could not read previous command. Try running a command first!"
         exit 1
     fi
+
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $LAST_CMD" >> "$FINAL_FILE"
     echo "✅ Saved command: \"$LAST_CMD\""
     echo "📂 Location: $FINAL_FILE"
     exit 0
 fi
 
+# Start the custom (lc) subshell session
 echo "================================================="
 echo " Enter active session. Type 'exit' to turn off.  "
 echo " Use 'lc add' after any command to save it.       "
