@@ -16,7 +16,11 @@ curl -sSL https://githubusercontent.com -o ~/bin/lc && chmod +x ~/bin/lc && sour
 1. Type `lc` to start your active tracking workspace. Your prompt will change to `(lc)`.
 2. Run your development or system tasks normally.
 3. Type `lc add` immediately after a critical command to save it permanently.
-4. Type `exit` to close the session safely.
+4. Type `lc list` anywhere to inspect your last 10 saved lines instantly.
+5. Type `exit` to close the session safely.
+
+### 🔋 Battery Protection (Auto-Save)
+While inside the `lc` workspace, an automated background helper copies your live shell activity to `~/project_logs/autosave_backup.log` every 5 minutes. If your laptop loses power unexpectedly, your recent workspace memory is safe.
 
 ## 🗑️ Uninstallation
 
