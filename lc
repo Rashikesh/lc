@@ -2,23 +2,36 @@
 
 # ==========================================
 # CUSTOM PERSONAL COMMAND: lc
-# Version: 1.0.0
+# Version: 1.1.0
 # ==========================================
 
-VERSION="1.0.0"
+VERSION="1.1.0"
+LOG_DIR="$HOME/project_logs"
+mkdir -p "$LOG_DIR"
+FINAL_FILE="$LOG_DIR/saved_commands.txt"
+BACKUP_FILE="$LOG_DIR/autosave_backup.log"
 
-# Check for version flag
+# 1. Flag: Check Version
 if [ "$1" = "--version" ] || [ "$1" = "-v" ]; then
     echo "lc version $VERSION"
     exit 0
 fi
 
-# Define where your personal logs will be stored permanently
-LOG_DIR="$HOME/project_logs"
-mkdir -p "$LOG_DIR"
-FINAL_FILE="$LOG_DIR/saved_commands.txt"
+# 2. Command: lc list (Prints last 10 saved entries)
+if [ "$1" = "list" ]; then
+    if [ ! -f "$FINAL_FILE" ] || [ ! -s "$FINAL_FILE" ]; then
+        echo "📂 Your saved commands log is currently empty!"
+    else
+        echo "================================================="
+        echo " 📋 LAST 10 SAVED COMMANDS                       "
+        echo "================================================="
+        tail -n 10 "$FINAL_FILE"
+        echo "================================================="
+    fi
+    exit 0
+fi
 
-# If the user types 'lc add', capture the previous command from history
+# 3. Command: lc add (Manual tracking save)
 if [ "$1" = "add" ]; then
     LAST_CMD=$(history 2 | head -n 1 | sed 's/^[ ]*[0-9]*[ ]*//')
     
@@ -33,17 +46,34 @@ if [ "$1" = "add" ]; then
     exit 0
 fi
 
-# Start the custom (lc) subshell session
+# 4. Start active tracking workspace with a background auto-save loop
 echo "================================================="
 echo " Enter active session. Type 'exit' to turn off.  "
-echo " Use 'lc add' after any command to save it.       "
+echo " Use 'lc add' to save manually, 'lc list' to view."
+echo " 🔋 Auto-saving raw history buffer every 5 mins. "
 echo "================================================="
 
+# Start a background process that safely dumps memory history to disk every 300 seconds (5 minutes)
+(
+    while true; do
+        sleep 300
+        # Check if the shell session is still alive before dumping
+        if [ -f ~/.bash_history ]; then
+            tail -n 50 ~/.bash_history > "$BACKUP_FILE" 2>/dev/null
+        fi
+    done
+) &
+AUTOSAVE_PID=$!
+
+# Launch custom interactive shell layout
 bash --init-file <(echo "
     if [ -f ~/.bashrc ]; then source ~/.bashrc; fi
     export PS1='(lc)\u@\h:\w\$ '
     export PROMPT_COMMAND='history -a; history -n'
 ")
+
+# Kill the background auto-save loop cleanly when the user types 'exit'
+kill $AUTOSAVE_PID 2>/dev/null
 
 echo "================================================="
 echo " (lc) Deactivated. Back to normal prompt.        "
